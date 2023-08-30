@@ -1,0 +1,205 @@
+
+
+#Hola! Acá levantamos dfs que vayamos a usar en varios módulos o funciones que necesitemos en varios módulos.
+#De esta forma, los levanta una sola vez cuando empieza a correr la app
+
+
+#Objects defined in global.R are similar to those defined in app.R outside of the server function definition, with one important difference: they are loaded into the global environment of the R session; all R code in a Shiny app is run in the global environment or a child of it.
+
+
+############### General ##################
+
+library(tidyverse)
+library(readxl)
+library(openxlsx)
+
+btn_style <- "float:right;border-radius: 15px;"
+
+################################ MAURI ################################
+# colores7<- c("#1d6eef", "#3f84f1","#619af4", "#83aff6","#a5c5f9","#c6dbfb","#e8f0fd")
+# colores7b<- c("#032d5b", "#294c73","#4f6c8d", "#758ca5","#9aabbd","#c0cad6","#e5eaee")
+# 
+# colores8<- c("#1d6eef", "#edcf20","#032d5b", "#848484","#83aff6","#f5e585","#c0cad6","#faf3c7")
+# colores19<- c("#1d6eef", "#619af4","#83aff6", "#a5c5f9","#c6dbfb","#e8f0fd","#032d5b","#294c73","#4f6c8d","#9aabbd", "#c0cad6","#e5eaee", 
+#               "#edcf20", "#f0d641", "#f2dd63","#f5e585", "#f8eca6","#faf3c7","#848484")
+######################################################################
+
+colores2 = c("#1d6eef", "#edcf20")
+
+colores4 = c("#1d6eef", "#edcf20", "#032d5b", "#a5a5a5")
+
+colores5 <- c("#1d6eef","#edcf20","#032d5b","#a5a5a5","#3f84f1")
+
+# colores14 <- c("#1d6eef",
+#                "#687aad",
+#                "#facf7d",
+#                "#8adbd1",
+#                "#bda8c3",
+#                "#e4808e",
+#                "#739ab9",
+#                "#afd7b5",
+#                "#e5a0ae",
+#                "#e7bfce",
+#                "#7fbbc5",
+#                "#9291b8",
+#                "#f7e8cb",
+#                "#d5d399")
+
+texto_fuentes <- '¿Cuál es la fuente de estos datos? Ver '#Metodología
+
+tabla_resultados <- readRDS("www/tabla_resultados.RDS")
+
+texto_cita <- "Vas a usar nuestros datos? Citanos! DOI: 10.5281/zenodo.7114666"
+
+trimestres <- tabla_resultados[["tasas_por_sexo_df"]] %>% ungroup() %>% 
+  mutate(periodo = factor(paste0(trim, "°T ",anio),         
+                          levels = unique(paste0(trim, "°T ",anio)))) %>% 
+  select(periodo) %>% unique() %>% pull(periodo)
+
+tabla_metadata <- read_excel("www/metadata.xlsx") %>% select(indicador, metadata)
+
+###Inflación#####
+
+
+ipc_series_ctes <- read_excel("preprocesamiento/fuentes/ipc_series_ctes.xlsx")
+
+nombre_trimestre_base <- unique(ipc_series_ctes$nombre_trim_base[!is.na(ipc_series_ctes$nombre_trim_base)])
+
+
+###################Secciones#####################################
+
+
+####Tipo de inserción##############
+
+# t3_acomodo <- tabla_resultados[["tasas_no_registro_df"]] %>% 
+#   rename("Proporción de no Registrados" = "valor") %>% 
+#   select(-indicador) %>% 
+#   mutate(JERARQUIA = "Trabajadores Asalariados")
+# 
+# tabla_tipo_insercion <- tabla_resultados[["sexo_segun_jerarquias_df"]] %>% 
+#   left_join(.,t3_acomodo, by = c("anio", "trim","Sexo", "JERARQUIA"))
+# 
+# tabla_tipo_insercion_asal <- tabla_tipo_insercion %>% 
+#   filter(JERARQUIA == "Trabajadores Asalariados") %>% 
+#   mutate("Trabajadores Asalariados No Registrados" = round(tasa*(`Proporción de no Registrados`)/100,1),
+#          "Trabajadores Asalariados Registrados" = round(tasa*(100-`Proporción de no Registrados`)/100,1)) %>% 
+#   select(-`Proporción de no Registrados`,-"JERARQUIA",-tasa) %>% 
+#   gather(., key ="JERARQUIA", value = "tasa",-Sexo,-anio,-trim)
+# 
+# tabla_tipo_insercion <- bind_rows((tabla_tipo_insercion %>% select(-`Proporción de no Registrados`)),tabla_tipo_insercion_asal) %>%
+#   filter(JERARQUIA != "Trabajadores Asalariados")
+# 
+# jerarqs <- tabla_tipo_insercion %>% ungroup() %>%  select(JERARQUIA) %>% unique()
+# 
+# jerarqs <- jerarqs$JERARQUIA
+
+####Tasas sexo##############
+
+tasas <- tabla_resultados[["tasas_por_sexo_df"]]$indicador %>% unique()
+
+tasas <- tasas[grepl("Tasa",tasas)]
+
+
+
+
+####Tasas sexo edad##############
+
+tasas_edad <- tabla_resultados[["tasas_por_sexo_edad_df"]]$indicador %>% unique()
+
+tasas_edad <- tasas_edad[grepl("Tasa",tasas_edad)]
+
+grupos_edad <- (tabla_resultados[["tasas_por_sexo_edad_df"]] %>% drop_na())$GRUPO_EDAD %>% unique()
+
+####Ramas##############
+
+# ramas <- tabla_resultados[["ramas_sexo_df"]] %>% ungroup() %>%  select(`Rama de la ocupación`) %>% unique() %>% drop_na()
+# 
+# ramas <- ramas$`Rama de la ocupación`
+
+####Deciles##############
+
+# nombres_deciles <- data.frame("tabla" =c("deciles_IPCF_sexo_df",
+#                                          "deciles_ITI_sexo_df"),
+#                               
+#                               "cod" =c("DECCFR",
+#                                        "DECINDR"),
+#                               
+#                               "nombre"= c("Ingreso per cápita Familiar",
+#                                           "Ingreso Total Individual"
+#                               ))
+# 
+# ingresos <- nombres_deciles %>% pull(nombre)
+
+####Brechas##############
+
+#respetar orden!!!!!
+nombres_brechas <- data.frame("tabla" =c("brecha_ITI_df",
+                                         "brecha_IOP_df"),
+                              
+                              "cod" =c("brecha.ITI",
+                                       "brecha.IOP"),
+                              
+                              "nombre"= c("Ingreso Total Individual",
+                                          "Ingreso mensual de la Ocupación Principal"))
+
+####Brechas desagregadas##############
+# 
+# 
+# #respetar orden!!!!!
+# nombres_brechas_desag <- data.frame("tabla" =c("brecha_IOP_calif_df",
+#                                                "brecha_IOP_hr_calif_df",
+#                                                "brecha_IOP_nivel_educ_df",
+#                                                "brecha_IOP_hr_nivel_educ_df"),
+#                                     
+#                                     "cod" =c("brecha.IOP.calif",
+#                                              "brecha.IOP.hr.calif",
+#                                              "brecha.IOP.nivel.educ",
+#                                              "brecha.IOP.hr.nivel.educ"),
+#                                     
+#                                     "nombre"= c("Ingreso mensual de la Ocupación Principal",
+#                                                 "Ingreso horario de la Ocupación Principal",
+#                                                 "Ingreso mensual de la Ocupación Principal",
+#                                                 "Ingreso horario de la Ocupación Principal"),
+#                                     
+#                                     "variable_desag" = c("CALIFICACION", "CALIFICACION", "NIVEL_EDUCATIVO","NIVEL_EDUCATIVO"),
+#                                     "variable_desag_nombre" = c("Calificación", "Calificación", "Nivel educativo","Nivel educativo"))
+# 
+# 
+# v1 <- as.character(unique(tabla_resultados[["brecha_IOP_calif_df"]]$CALIFICACION))
+# v2 <- as.character(unique(tabla_resultados[["brecha_IOP_nivel_educ_df"]]$NIVEL_EDUCATIVO))
+# 
+# 
+# opciones_actualizacion<- data.frame("Calificación" = v1,"Nivel educativo" = v2, "id" = c(1,2,3,4)
+# ) %>% 
+#   pivot_longer(!id,names_to = "variable", values_to = "valores")
+# 
+# opciones_actualizacion$variable[opciones_actualizacion$variable =="Nivel.educativo"] <- "Nivel educativo"
+# 
+# 
+# ####Trabajo remunerado##############
+# 
+# vector_horas <- c("Ocupación principal","Totales -todas las ocupaciones-")
+# 
+# 
+# #respetar orden!!!!!
+# nombres_horas_remuneradas <- data.frame("tabla" =c("OP_hr_calif_df",
+#                                                    "OP_hr_nivel_educ_df"),
+#                                         
+#                                         "variable_desag" = c("CALIFICACION", "NIVEL_EDUCATIVO"),
+#                                         "variable_desag_nombre" = c("Calificación", "Nivel educativo"),
+#                                         
+#                                         "cod" =c("Media.hs.ocup.princ",
+#                                                  "Media.hs.total.ocup"),
+#                                         
+#                                         "nombre"= c(vector_horas[1],
+#                                                     vector_horas[2]))
+# 
+# 
+# ####Trabajo no remunerado##############
+# 
+# vec_sexo <- unique(tabla_resultados$tareas_domesticas_sexo_df$Sexo)
+# 
+# ####Derechos laborales de las trabajadoras de servicio doméstico##############
+# 
+# derechos <- unique(tabla_resultados$derechos_servicio_domestico_df$indicador) 
+
